@@ -35,7 +35,7 @@ defmodule NebulexFdbAdapter do
     end
   end
 
-  @impl true
+  @impl Nebulex.Adapter
   def init(opts) do
     __MODULE__ = :ets.new(__MODULE__, [:named_table, :public, {:readd_concurrency, true}])
     :ok = FDB.start(610)
@@ -60,7 +60,7 @@ defmodule NebulexFdbAdapter do
     {:ok, []}
   end
 
-  @impl true
+  @impl Nebulex.Adapter
   def get(cache, key, _opts) do
     FDB.Database.transact(
       cache.__db__,
@@ -70,7 +70,7 @@ defmodule NebulexFdbAdapter do
     )
   end
 
-  @impl true
+  @impl Nebulex.Adapter
   def set(cache, %Object{key: key, value: value}, opts) do
     FDB.Database.transact(
       cache.__db__,
@@ -80,7 +80,7 @@ defmodule NebulexFdbAdapter do
     )
   end
 
-  @impl true
+  @impl Nebulex.Adapter
   def delete(cache, key, opts) do
     FDB.Database.transact(
       cache.__db__,
