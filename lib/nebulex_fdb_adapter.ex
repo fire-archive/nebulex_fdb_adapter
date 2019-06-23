@@ -45,11 +45,14 @@ defmodule NebulexFdbAdapter do
     db =
       FDB.Cluster.create(cluster_file_path)
       |> FDB.Database.create()
+
     root = Directory.new()
+
     dir =
       Database.transact(db, fn tr ->
         Directory.create_or_open(root, tr, db_path)
       end)
+
     test_dir = Subspace.new(dir)
     coder = Transaction.Coder.new(test_dir)
     connected_db = FDB.Database.set_defaults(db, %{coder: coder})
@@ -60,6 +63,7 @@ defmodule NebulexFdbAdapter do
   @impl true
   def get(_cache, key, opts) do
     db = Keyword.fetch!(opts, :db)
+
     FDB.Database.transact(
       db,
       fn transaction ->
@@ -71,6 +75,7 @@ defmodule NebulexFdbAdapter do
   @impl true
   def set(_cache, %Object{key: key, value: value}, opts) do
     db = Keyword.fetch!(opts, :db)
+
     FDB.Database.transact(
       db,
       fn transaction ->
@@ -79,11 +84,17 @@ defmodule NebulexFdbAdapter do
     )
   end
 
-  # FDB.Database.transact(connected_db ,
-  # fn transaction ->
-  #   FDB.Transaction.clear(transaction, "key")
-  # end
-  # )
+  @impl true
+  def delete(_cache, key, opts) do
+    db = Keyword.fetch!(opts, :db)
+
+    FDB.Database.transact(
+      db,
+      fn transaction ->
+        FDB.Transaction.clear(transaction, key)
+      end
+    )
+  end
 
   # Database.transact(db, fn tr ->
   #   Directory.list(root, tr, ["nebulex"])
