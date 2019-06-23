@@ -30,14 +30,13 @@ defmodule NebulexFdbAdapter do
       def __cluster_file_path__, do: unquote(cluster_file_path)
 
       def __db__ do
-        :ets.lookup(__MODULE__, :db)
+        :ets.lookup_element(__MODULE__, :db, 2)
       end
     end
   end
 
   @impl Nebulex.Adapter
   def init(opts) do
-    __MODULE__ = :ets.new(__MODULE__, [:named_table, :public, {:readd_concurrency, true}])
     :ok = FDB.start(610)
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
@@ -56,6 +55,7 @@ defmodule NebulexFdbAdapter do
     test_dir = Subspace.new(dir)
     coder = Transaction.Coder.new(test_dir)
     connected_db = FDB.Database.set_defaults(db, %{coder: coder})
+    :ets.new(__MODULE__, [:set, :public, {:read_concurrency, true}, :named_table])
     true = :ets.insert(__MODULE__, {:db, connected_db})
     {:ok, []}
   end
