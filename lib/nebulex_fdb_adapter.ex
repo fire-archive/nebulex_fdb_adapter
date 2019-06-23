@@ -30,7 +30,7 @@ defmodule NebulexFdbAdapter do
       def __cluster_file_path__, do: unquote(cluster_file_path)
 
       def __db__ do
-        :ets.lookup_element(__MODULE__, :db, 2)
+        :ets.lookup(__MODULE__, :db)
       end
     end
   end
