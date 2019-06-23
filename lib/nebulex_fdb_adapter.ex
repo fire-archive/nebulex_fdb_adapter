@@ -30,14 +30,14 @@ defmodule NebulexFdbAdapter do
       def __cluster_file_path__, do: unquote(cluster_file_path)
 
       def __db__ do
-        :ets.lookup_element(:meta, :db, 2)
+        :ets.lookup_element(__MODULE__, :db, 2)
       end
     end
   end
 
   @impl true
   def init(opts) do
-    :meta = :ets.new(__MODULE__, [:named_table, :public, {:readd_concurrency, true}])
+    __MODULE__ = :ets.new(__MODULE__, [:named_table, :public, {:readd_concurrency, true}])
     :ok = FDB.start(610)
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
@@ -61,11 +61,9 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get(_cache, key, opts) do
-    db = Keyword.fetch!(opts, :db)
-
+  def get(cache, key, _opts) do
     FDB.Database.transact(
-      db,
+      cache.__db__,
       fn transaction ->
         FDB.Transaction.get(transaction, key)
       end
@@ -73,11 +71,9 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set(_cache, %Object{key: key, value: value}, opts) do
-    db = Keyword.fetch!(opts, :db)
-
+  def set(cache, %Object{key: key, value: value}, opts) do
     FDB.Database.transact(
-      db,
+      cache.__db__,
       fn transaction ->
         FDB.Transaction.set(transaction, key, value)
       end
@@ -85,11 +81,9 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def delete(_cache, key, opts) do
-    db = Keyword.fetch!(opts, :db)
-
+  def delete(cache, key, opts) do
     FDB.Database.transact(
-      db,
+      cache.__db__,
       fn transaction ->
         FDB.Transaction.clear(transaction, key)
       end
