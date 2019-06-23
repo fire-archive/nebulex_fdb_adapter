@@ -31,7 +31,7 @@ defmodule NebulexFdbAdapter do
       def __cluster_file_path__, do: unquote(cluster_file_path)
 
       def __db__ do
-        :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
+       :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
       end
     end
   end
@@ -62,32 +62,22 @@ defmodule NebulexFdbAdapter do
 
   @impl Nebulex.Adapter
   def get(cache, key, _opts) do
-    FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        FDB.Transaction.get(transaction, key)
-      end
-    )
+    transaction = Transaction.create(cache.__db__)
+    Transaction.get(transaction, key)
   end
 
   @impl Nebulex.Adapter
-  def set(cache, %Object{key: key, value: value}, opts) do
-    FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        FDB.Transaction.set(transaction, key, value)
-      end
-    )
+  def set(cache, %Object{key: key, value: value}, _opts) do
+    transaction = Transaction.create(cache.__db__)
+    :ok = Transaction.set(transaction, key, value)
+    :ok = Transaction.commit(transaction)
   end
 
   @impl Nebulex.Adapter
-  def delete(cache, key, opts) do
-    FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        FDB.Transaction.clear(transaction, key)
-      end
-    )
+  def delete(cache, key, _opts) do
+    transaction = Transaction.create(cache.__db__)
+    :ok = Transaction.clear(transaction, key)
+    :ok = Transaction.commit(transaction)
   end
 
   # Database.transact(db, fn tr ->

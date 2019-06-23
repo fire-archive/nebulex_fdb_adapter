@@ -16,7 +16,8 @@ defmodule NebulexFdbAdapterTest do
   end
 
   test "get an unknown key" do
-    assert Cache.get("hi") == nil
+    Cache.delete("test")
+    assert Cache.get("test") == nil
   end
 
   test "set, get, delete" do
