@@ -22,7 +22,7 @@ defmodule NebulexFdbAdapter.MixProject do
     if System.get_env("NBX_TEST") do
       [github: "cabol/nebulex", tag: "v1.0.1"]
     else
-      "~> 1.0"
+      "~> 1.1"
     end
   end
 

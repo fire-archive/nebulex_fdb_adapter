@@ -36,7 +36,7 @@ defmodule NebulexFdbAdapter do
     end
   end
 
-  @impl Nebulex.Adapter
+  @impl true
   def init(opts) do
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
@@ -60,20 +60,23 @@ defmodule NebulexFdbAdapter do
     {:ok, []}
   end
 
-  @impl Nebulex.Adapter
-  def get(cache, key, _opts) do
+  @impl true
+  def get(cache, key, opts) do
     transaction = Transaction.create(cache.__db__)
     Transaction.get(transaction, key)
   end
 
-  @impl Nebulex.Adapter
+  @impl true
   def set(cache, %Object{key: key, value: value}, _opts) do
     transaction = Transaction.create(cache.__db__)
-    :ok = Transaction.set(transaction, key, value)
-    :ok = Transaction.commit(transaction)
+    :ok = FDB.Transaction.set(transaction, key, value)
+    case Transaction.commit(transaction) do
+      :ok -> true
+      _ -> false
+    end
   end
 
-  @impl Nebulex.Adapter
+  @impl true
   def delete(cache, key, _opts) do
     transaction = Transaction.create(cache.__db__)
     :ok = Transaction.clear(transaction, key)
