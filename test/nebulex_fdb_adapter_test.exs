@@ -21,9 +21,9 @@ defmodule NebulexFdbAdapterTest do
   end
 
   test "set, get, and delete" do
-    assert Cache.set("test", "hello") == true
-    assert Cache.get("test") == "hello"
-    assert Cache.delete("test") == nil
+    assert Cache.set("test", "hello") == "hello"
+    assert Cache.get("test") == nil
+    assert Cache.delete("test") == "test"
     assert Cache.get("test") == nil
   end
 end

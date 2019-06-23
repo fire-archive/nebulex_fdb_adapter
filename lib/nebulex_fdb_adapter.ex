@@ -51,9 +51,8 @@ defmodule NebulexFdbAdapter do
       Database.transact(db, fn tr ->
         Directory.create_or_open(root, tr, db_path)
       end)
-
-    test_dir = Subspace.new(dir)
-    coder = Transaction.Coder.new(test_dir)
+    subspace = Subspace.new(dir)
+    coder = Transaction.Coder.new(subspace)
     connected_db = FDB.Database.set_defaults(db, %{coder: coder})
     :ets.new(:nebulex_fdb_adapter, [:set, :public, {:read_concurrency, true}, :named_table])
     true = :ets.insert(:nebulex_fdb_adapter, {:db, connected_db})
@@ -62,25 +61,29 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def get(cache, key, opts) do
-    transaction = Transaction.create(cache.__db__)
-    Transaction.get(transaction, key)
+    FDB.Database.transact(cache.__db__,
+      fn transaction ->
+        FDB.Transaction.get(transaction, key)
+      end
+    )
   end
 
   @impl true
   def set(cache, %Object{key: key, value: value}, _opts) do
-    transaction = Transaction.create(cache.__db__)
-    :ok = FDB.Transaction.set(transaction, key, value)
-    case Transaction.commit(transaction) do
-      :ok -> true
-      _ -> false
+    FDB.Database.transact(cache.__db__,
+    fn transaction ->
+      FDB.Transaction.set(transaction, key, value)
     end
+    )
   end
 
   @impl true
   def delete(cache, key, _opts) do
-    transaction = Transaction.create(cache.__db__)
-    :ok = Transaction.clear(transaction, key)
-    :ok = Transaction.commit(transaction)
+    FDB.Database.transact(cache.__db__,
+    fn transaction ->
+      FDB.Transaction.clear(transaction, key)
+    end
+    )
   end
 
   # Database.transact(db, fn tr ->
