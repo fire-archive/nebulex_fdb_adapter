@@ -134,10 +134,10 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def set(cache, %Object{key: key, value: value}, _opts) do
+    value = :erlang.term_to_binary(value)
     FDB.Database.transact(
       cache.__db__,
       fn transaction ->
-        value = :erlang.term_to_binary(value)
         Transaction.set(transaction, key, value)
       end
     )
