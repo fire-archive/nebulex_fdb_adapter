@@ -77,27 +77,47 @@ defmodule NebulexFdbAdapter do
   def get_many_from_list(cache, list, opts) do
     values =
       Enum.map(list, fn key ->
-         Database.transact(
-           cache.__db__,
-           fn transaction ->
-             Transaction.get(transaction, key)
-           end
-         )
+        Database.transact(
+          cache.__db__,
+          fn transaction ->
+            Transaction.get(transaction, key)
+          end
+        )
       end)
+
     Enum.zip(list, values)
-    |> List.foldr( %{}, fn {key, value}, acc -> Map.put(acc, key, %Object{ key: key, value: value})end)
+    |> List.foldr(%{}, fn {key, value}, acc ->
+      Map.put(acc, key, %Object{key: key, value: value})
+    end)
   end
 
-  # def set_many(cache, list, opts)  do
-  #   Enum.map(list, fn %Object{key: key, value: value} ->
-  #     Database.transact(
-  #       cache.__db__,
-  #       fn transaction ->
-  #         Transaction.set(transaction, key, value)
-  #       end
-  #     )
-  #   end)
-  # end
+  def set_many(cache, list, opts) do
+    keys = Enum.map(list, fn %Object{key: key} -> key end)
+
+    values =
+      Enum.map(list, fn %Object{key: key, value: value} ->
+        Database.transact(
+          cache.__db__,
+          fn transaction ->
+            Transaction.set(transaction, key, value)
+          end
+        )
+      end)
+
+    result =
+      Enum.zip(keys, values)
+      |> Enum.reduce([], fn {key, value}, acc ->
+        case value do
+          :ok -> acc
+          _ -> acc ++ [key]
+        end
+      end)
+
+    case result do
+      [] -> :ok
+      _ -> {:error, result}
+    end
+  end
 
   @impl true
   def set(cache, %Object{key: key, value: value}, _opts) do
