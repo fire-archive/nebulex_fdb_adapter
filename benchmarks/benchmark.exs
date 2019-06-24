@@ -86,7 +86,8 @@ Benchee.run(
   before_scenario: fn cache ->
     {cache, Enum.random(keys)}
   end,
-  parallel: 20,
+  parallel: 100,
+  time: 10,
   formatters: [
     Benchee.Formatters.Console,
     Benchee.Formatters.HTML
