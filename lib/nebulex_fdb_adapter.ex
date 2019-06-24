@@ -69,12 +69,16 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def get(cache, key, _opts) do
-    Database.transact(
+    value = Database.transact(
       cache.__db__,
       fn transaction ->
         Transaction.get(transaction, key)
       end
     )
+    case value do
+    nil -> nil
+    _ -> :erlang.binary_to_term(value, [:safe])
+    end
   end
 
   @impl true
@@ -91,6 +95,7 @@ defmodule NebulexFdbAdapter do
 
     Enum.zip(list, values)
     |> List.foldr(%{}, fn {key, value}, acc ->
+      value = :erlang.binary_to_term(value, [:safe])
       Map.put(acc, key, %Object{key: key, value: value})
     end)
   end
@@ -103,6 +108,7 @@ defmodule NebulexFdbAdapter do
 
     values =
       Enum.map(list, fn %Object{key: key, value: value} ->
+        value = :erlang.term_to_binary(value)
         Database.transact(
           cache.__db__,
           fn transaction ->
@@ -131,6 +137,7 @@ defmodule NebulexFdbAdapter do
     FDB.Database.transact(
       cache.__db__,
       fn transaction ->
+        value = :erlang.term_to_binary(value)
         Transaction.set(transaction, key, value)
       end
     )
@@ -187,21 +194,27 @@ defmodule NebulexFdbAdapter do
           Future.await(future)
         end
       )
-
+    value = :erlang.binary_to_term(value, [:safe])
     %Object{key: key, value: value}
   end
 
   @impl true
-
-  # def update_counter(cache, key, incr, _opts) do
-  #   FDB.Database.transact(
-  #     cache.__db__,
-  #     fn transaction ->
-  #       value = Transaction.get(transaction, key)
-  #       Transaction.set(transaction, key, value + incr)
-  #     end
-  #   )
-  # end
+  def update_counter(cache, key, incr, _opts) do
+    FDB.Database.transact(
+      cache.__db__,
+      fn transaction ->
+        orig_value = Transaction.get(transaction, key)
+        |> :erlang.binary_to_term([:safe])
+        new_value = orig_value + incr
+        ets_value = :erlang.term_to_binary(new_value)
+        err = Transaction.set(transaction, key, ets_value)
+        case err do
+          :ok -> new_value
+          _ -> nil
+        end
+      end
+    )
+  end
 
   # Database.transact(db, fn tr ->
   #   Directory.list(root, tr, ["nebulex"])
