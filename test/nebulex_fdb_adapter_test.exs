@@ -43,6 +43,11 @@ defmodule NebulexFdbAdapterTest do
     assert Cache.has_key?("1") == true
   end
 
+  test "take key" do
+    assert Cache.set("take", "one") == "one"
+    assert Cache.take("take") == "one"
+  end
+
   test "set many and get many" do
     assert Cache.set_many(%{"1" => "one", "2" => "two", "3" => "three"})
     assert Cache.get_many(["1", "2", "3"]) == %{"1" => "one", "2" => "two", "3" => "three"}

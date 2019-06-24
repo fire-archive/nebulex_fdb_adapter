@@ -12,13 +12,14 @@ defmodule NebulexFdbAdapter do
 
   alias Nebulex.Object
 
-  alias FDB.{Directory, Transaction, Database, Cluster}
+  alias FDB.{Directory, Transaction, Database, Cluster, Future}
   alias FDB.Coder.{Subspace}
 
   ## Adapter
 
   @impl true
   defmacro __before_compile__(env) do
+    # TODO move to init
     :ok = FDB.start(600)
     cache = env.module
     config = Module.get_attribute(cache, :config)
@@ -156,6 +157,40 @@ defmodule NebulexFdbAdapter do
         Transaction.clear(transaction, key)
       end
     )
+  end
+
+  @impl true
+  def expire(_cache, _key, _ttl) do
+    raise "Not Implemented. Will be implemented on need."
+  end
+
+  @impl true
+  def object_info(_cache, _key, _attr) do
+    raise "Not Implemented. Will be implemented on need."
+  end
+
+  @impl true
+  def stream(_cache, _query, _opts) do
+    raise "Not Implemented. Will be implemented on need."
+  end
+
+  @impl true
+  def take(cache, key, _opts) do
+    value = FDB.Database.transact(
+      cache.__db__,
+      fn transaction ->
+        future = Transaction.get_q(transaction, key)
+        Transaction.clear(transaction, key)
+        Future.await(future)
+      end
+    )
+    %Object{key: key, value: value}
+  end
+
+  @impl true
+
+  def update_counter(_cache, _key, _incr, _opts) do
+    raise "Not Implemented. Will be implemented on need."
   end
 
   # Database.transact(db, fn tr ->
