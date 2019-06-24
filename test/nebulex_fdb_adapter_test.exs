@@ -27,11 +27,16 @@ defmodule NebulexFdbAdapterTest do
     assert Cache.get("test") == nil
   end
 
-  # test "set and get many" do
-  #   assert Cache.set("1", "one") == "one"
-  #   assert Cache.set("2", "two") == "two"
-  #   assert Cache.set("3", "three") == "three"
-  #   assert Cache.get_many(["1", "2", "3"]) == ["one", "two", "three"]
+  test "set and get many" do
+    assert Cache.set("1", "one") == "one"
+    assert Cache.set("2", "two") == "two"
+    assert Cache.set("3", "three") == "three"
+    assert Cache.get_many(["1", "2", "3"]) == %{"1" => "one", "2" => "two", "3" => "three"}
+  end
+
+  # test "set many and get many" do
+  #   assert Cache.set_many(%{"1" => "one", "2" => "two", "3" => "three"})
+  #   assert Cache.get_many(["1", "2", "3"]) == %{"1" => "one", "2" => "two", "3" => "three"}
   # end
 
   # test "set many and get" do
