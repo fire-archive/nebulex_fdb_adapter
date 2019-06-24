@@ -11,7 +11,7 @@ end)
 
 # samples
 keys = Enum.to_list(1..10_000)
-bulk = for x <- 1..100, do: {x, x}
+bulk = for x <- 1..10, do: {x, x}
 
 inputs = %{
   "Distributed Cache" => NebulexFdbAdapter.TestCache
@@ -86,7 +86,7 @@ Benchee.run(
   before_scenario: fn cache ->
     {cache, Enum.random(keys)}
   end,
-  parallel: 4,
+  parallel: 20,
   formatters: [
     Benchee.Formatters.Console,
     Benchee.Formatters.HTML

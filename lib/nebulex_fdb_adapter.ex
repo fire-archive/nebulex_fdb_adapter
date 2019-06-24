@@ -91,7 +91,7 @@ defmodule NebulexFdbAdapter do
   @impl true
   def get_many(cache, list, _opts) do
     values =
-      Enum.map(list, fn key ->
+      pmap(list, fn key ->
         key = :erlang.term_to_binary(key)
 
         Database.transact(
@@ -103,34 +103,34 @@ defmodule NebulexFdbAdapter do
       end)
 
     Enum.zip(list, values)
-    |> List.foldr(%{}, fn {key, value}, acc ->
-      value = :erlang.binary_to_term(value, [:safe])
+    |> List.foldr(%{}, fn {key, ets_value}, acc ->
+      value =
+        case ets_value do
+          nil -> nil
+          ets_value -> :erlang.binary_to_term(ets_value, [:safe])
+        end
+
       Map.put(acc, key, %Object{key: key, value: value})
     end)
   end
 
   @impl true
   def set_many(cache, list, _opts) do
-    keys =
-      Enum.map(list, fn
-        %Object{key: key} -> key
-      end)
-
     values =
-      Enum.map(list, fn %Object{key: key, value: value} ->
+      pmap(list, fn %Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
         key = :erlang.term_to_binary(key)
 
         Database.transact(
-          cache.__db__,
-          fn transaction ->
-            Transaction.set(transaction, key, value)
-          end
-        )
+            cache.__db__,
+            fn transaction ->
+              Transaction.set(transaction, key, value)
+            end
+          )
       end)
 
     result =
-      Enum.zip(keys, values)
+      Enum.zip(list, values)
       |> Enum.reduce([], fn {key, value}, acc ->
         case value do
           :ok -> acc
@@ -269,4 +269,10 @@ defmodule NebulexFdbAdapter do
   # Database.transact(db, fn tr ->
   #   Directory.list(root, tr, ["nebulex"])
   # end)
+
+  defp pmap(collection, func) do
+    collection
+    |> Enum.map(&(Task.async(fn -> func.(&1) end)))
+    |> Enum.map(&Task.await/1)
+  end
 end

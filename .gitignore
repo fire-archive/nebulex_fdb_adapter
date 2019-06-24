@@ -22,8 +22,7 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 nebulex_fdb_adapter-*.tar
 
-
-/.elixir_ls/
+/.elixir_ls
 /tests
 /benchmarks/output
 /log
