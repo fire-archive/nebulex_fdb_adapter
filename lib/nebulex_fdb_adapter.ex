@@ -176,21 +176,29 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def take(cache, key, _opts) do
-    value = FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        future = Transaction.get_q(transaction, key)
-        Transaction.clear(transaction, key)
-        Future.await(future)
-      end
-    )
+    value =
+      FDB.Database.transact(
+        cache.__db__,
+        fn transaction ->
+          future = Transaction.get_q(transaction, key)
+          Transaction.clear(transaction, key)
+          Future.await(future)
+        end
+      )
+
     %Object{key: key, value: value}
   end
 
   @impl true
 
-  def update_counter(_cache, _key, _incr, _opts) do
-    raise "Not Implemented. Will be implemented on need."
+  def update_counter(cache, key, incr, _opts) do
+    FDB.Database.transact(
+      cache.__db__,
+      fn transaction ->
+        value = Transaction.get(transaction, key)
+        Transaction.set(transaction, key, value + incr)
+      end
+    )
   end
 
   # Database.transact(db, fn tr ->
