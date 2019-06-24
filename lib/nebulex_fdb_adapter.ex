@@ -97,7 +97,9 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def set_many(cache, list, _opts) do
-    keys = Enum.map(list, fn %Object{key: key} -> key end)
+    keys = Enum.map(list, fn
+      %Object{key: key} -> key
+   end)
 
     values =
       Enum.map(list, fn %Object{key: key, value: value} ->
@@ -191,15 +193,15 @@ defmodule NebulexFdbAdapter do
 
   @impl true
 
-  def update_counter(cache, key, incr, _opts) do
-    FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        value = Transaction.get(transaction, key)
-        Transaction.set(transaction, key, value + incr)
-      end
-    )
-  end
+  # def update_counter(cache, key, incr, _opts) do
+  #   FDB.Database.transact(
+  #     cache.__db__,
+  #     fn transaction ->
+  #       value = Transaction.get(transaction, key)
+  #       Transaction.set(transaction, key, value + incr)
+  #     end
+  #   )
+  # end
 
   # Database.transact(db, fn tr ->
   #   Directory.list(root, tr, ["nebulex"])
