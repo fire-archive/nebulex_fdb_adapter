@@ -5,14 +5,14 @@ defmodule NebulexFdbAdapterTest do
   alias NebulexFdbAdapter.TestCache, as: Cache
 
   setup_all do
-    {:ok, _pid} = Cache.start_link()
+    {:ok, pid} = Cache.start_link()
     # Cache.flush()
     :ok
 
-    # on_exit(fn ->
-    #   _ = :timer.sleep(100)
-    #   if Process.alive?(pid), do: Cache.stop(pid)
-    # end)
+    on_exit(fn ->
+      _ = :timer.sleep(100)
+      if Process.alive?(pid), do: Cache.stop(pid)
+    end)
   end
 
   test "get an unknown key" do
@@ -21,10 +21,18 @@ defmodule NebulexFdbAdapterTest do
   end
 
   test "set, get, and delete" do
+    assert Cache.delete("test") == "test"
     assert Cache.set("test", "hello") == "hello"
-    assert Cache.get("test") == nil
+    assert Cache.get("test") == "hello"
     assert Cache.delete("test") == "test"
     assert Cache.get("test") == nil
+  end
+
+  test "set, get, and delete number" do
+    assert Cache.set("float_number", 100.0) == 100.0
+    assert Cache.delete("float_number") == "float_number"
+    assert Cache.set("float_number", 100.0) == 100.0
+    assert Cache.get("float_number") == 100.0
   end
 
   test "set and get many" do
@@ -35,6 +43,7 @@ defmodule NebulexFdbAdapterTest do
   end
 
   test "has unknown key" do
+    assert Cache.delete("appleappleapple") == "appleappleapple"
     assert Cache.has_key?("appleappleapple") == false
   end
 

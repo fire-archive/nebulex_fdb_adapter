@@ -69,22 +69,28 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def get(cache, key, _opts) do
-    value = Database.transact(
-      cache.__db__,
-      fn transaction ->
-        Transaction.get(transaction, key)
-      end
-    )
-    case value do
-    nil -> nil
-    _ -> :erlang.binary_to_term(value, [:safe])
+    ets_key = :erlang.term_to_binary(key)
+
+    ets_value =
+      Database.transact(
+        cache.__db__,
+        fn transaction ->
+          Transaction.get(transaction, ets_key)
+        end
+      )
+    value = case ets_value do
+      nil -> nil
+      value -> :erlang.binary_to_term(value, [:safe])
     end
+    %Object{key: key, value: value}
   end
 
   @impl true
   def get_many(cache, list, _opts) do
     values =
       Enum.map(list, fn key ->
+        key = :erlang.term_to_binary(key)
+
         Database.transact(
           cache.__db__,
           fn transaction ->
@@ -102,13 +108,16 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def set_many(cache, list, _opts) do
-    keys = Enum.map(list, fn
-      %Object{key: key} -> key
-   end)
+    keys =
+      Enum.map(list, fn
+        %Object{key: key} -> key
+      end)
 
     values =
       Enum.map(list, fn %Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
+        key = :erlang.term_to_binary(key)
+
         Database.transact(
           cache.__db__,
           fn transaction ->
@@ -134,18 +143,35 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def set(cache, %Object{key: key, value: value}, _opts) do
+    key = :erlang.term_to_binary(key)
     value = :erlang.term_to_binary(value)
-    FDB.Database.transact(
+
+    err = FDB.Database.transact(
       cache.__db__,
       fn transaction ->
         Transaction.set(transaction, key, value)
       end
     )
+    case err do
+      :ok -> true
+      nil -> false
+    end
   end
 
   @impl true
   def has_key?(cache, key) do
-    get(cache, key, []) != nil
+    ets_key = :erlang.term_to_binary(key)
+    ets_value =
+      Database.transact(
+        cache.__db__,
+        fn transaction ->
+          Transaction.get(transaction, ets_key)
+        end
+      )
+    case ets_value do
+      nil -> false
+      value -> true
+    end
   end
 
   @impl true
@@ -160,6 +186,8 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def delete(cache, key, _opts) do
+    key = :erlang.term_to_binary(key)
+
     FDB.Database.transact(
       cache.__db__,
       fn transaction ->
@@ -185,6 +213,8 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def take(cache, key, _opts) do
+    key = :erlang.term_to_binary(key)
+
     value =
       FDB.Database.transact(
         cache.__db__,
@@ -194,6 +224,7 @@ defmodule NebulexFdbAdapter do
           Future.await(future)
         end
       )
+
     value = :erlang.binary_to_term(value, [:safe])
     %Object{key: key, value: value}
   end
@@ -203,11 +234,14 @@ defmodule NebulexFdbAdapter do
     FDB.Database.transact(
       cache.__db__,
       fn transaction ->
-        orig_value = Transaction.get(transaction, key)
-        |> :erlang.binary_to_term([:safe])
+        orig_value =
+          Transaction.get(transaction, key)
+          |> :erlang.binary_to_term([:safe])
+
         new_value = orig_value + incr
         ets_value = :erlang.term_to_binary(new_value)
         err = Transaction.set(transaction, key, ets_value)
+
         case err do
           :ok -> new_value
           _ -> nil
