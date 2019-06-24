@@ -12,7 +12,7 @@ defmodule NebulexFdbAdapter do
 
   alias Nebulex.Object
 
-  alias FDB.{Directory, Transaction, Database}
+  alias FDB.{Directory, Transaction, Database, Cluster}
   alias FDB.Coder.{Subspace}
 
   ## Adapter
@@ -31,7 +31,7 @@ defmodule NebulexFdbAdapter do
       def __cluster_file_path__, do: unquote(cluster_file_path)
 
       def __db__ do
-       :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
+        :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
       end
     end
   end
@@ -42,8 +42,8 @@ defmodule NebulexFdbAdapter do
     db_path = Keyword.fetch!(opts, :db_path)
 
     db =
-      FDB.Cluster.create(cluster_file_path)
-      |> FDB.Database.create()
+      Cluster.create(cluster_file_path)
+      |> Database.create()
 
     root = Directory.new()
 
@@ -51,38 +51,66 @@ defmodule NebulexFdbAdapter do
       Database.transact(db, fn tr ->
         Directory.create_or_open(root, tr, db_path)
       end)
+
     subspace = Subspace.new(dir)
     coder = Transaction.Coder.new(subspace)
-    connected_db = FDB.Database.set_defaults(db, %{coder: coder})
+    connected_db = Database.set_defaults(db, %{coder: coder})
     :ets.new(:nebulex_fdb_adapter, [:set, :public, {:read_concurrency, true}, :named_table])
     true = :ets.insert(:nebulex_fdb_adapter, {:db, connected_db})
     {:ok, []}
   end
 
   @impl true
-  def get(cache, key, opts) do
-    FDB.Database.transact(cache.__db__,
+  def get(cache, key, _opts) do
+    Database.transact(
+      cache.__db__,
       fn transaction ->
-        FDB.Transaction.get(transaction, key)
+        Transaction.get(transaction, key)
+      end
+    )
+  end
+
+  # def get_many(cache, list, opts) do
+  #   result = Enum.map(list, fn key ->
+  #     Database.transact(
+  #       cache.__db__,
+  #       fn transaction ->
+  #         Transaction.get(transaction, key)
+  #       end
+  #     )
+  #   end)
+  #   Enum.zip(list, result)
+  #   |> Enum.map(fn {key, value} -> %{key: {value: value} end)
+  # end
+
+  # def set_many(cache, list, opts)  do
+  #   Enum.map(list, fn %Object{key: key, value: value} ->
+  #     Database.transact(
+  #       cache.__db__,
+  #       fn transaction ->
+  #         Transaction.set(transaction, key, value)
+  #       end
+  #     )
+  #   end)
+  # end
+
+  @impl true
+  def set(cache, %Object{key: key, value: value}, _opts) do
+    FDB.Database.transact(
+      cache.__db__,
+      fn transaction ->
+        Transaction.set(transaction, key, value)
       end
     )
   end
 
   @impl true
-  def set(cache, %Object{key: key, value: value}, _opts) do
-    FDB.Database.transact(cache.__db__,
-    fn transaction ->
-      FDB.Transaction.set(transaction, key, value)
-    end
-    )
-  end
-
-  @impl true
   def delete(cache, key, _opts) do
-    FDB.Database.transact(cache.__db__,
-    fn transaction ->
-      FDB.Transaction.clear(transaction, key)
-    end
+    FDB.Database.transact(
+      cache.__db__,
+      fn transaction ->
+        Transaction.clear(transaction, key)
+      end
     )
   end
 
