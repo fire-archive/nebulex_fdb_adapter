@@ -61,6 +61,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
+
+  def all(_cache, _query, _opts) do
+    raise "Not Implemented."
+  end
+
+  @impl true
   def get(cache, key, _opts) do
     Database.transact(
       cache.__db__,
@@ -125,6 +131,21 @@ defmodule NebulexFdbAdapter do
         Transaction.set(transaction, key, value)
       end
     )
+  end
+
+  @impl true
+  def has_key?(cache, key) do
+    get(cache, key, []) != nil
+  end
+
+  @impl true
+  def size(_cache) do
+    raise "Not Implemented."
+  end
+
+  @impl true
+  def flush(_cache) do
+    raise "Not Implemented."
   end
 
   @impl true
