@@ -30,6 +30,8 @@ defmodule NebulexFdbAdapter.MixProject do
   defp deps do
     [
       {:fdb, "6.0.15-1"},
+      {:benchee, "~> 1.0", optional: true, only: :dev},
+      {:benchee_html, "~> 1.0", optional: true, only: :dev},
       # This is because the adapter tests need some support modules and shared
       # tests from nebulex dependency, and the hex dependency doesn't include
       # the test folder. Hence, to run the tests it is necessary to fetch

@@ -78,10 +78,13 @@ defmodule NebulexFdbAdapter do
           Transaction.get(transaction, ets_key)
         end
       )
-    value = case ets_value do
-      nil -> nil
-      value -> :erlang.binary_to_term(value, [:safe])
-    end
+
+    value =
+      case ets_value do
+        nil -> nil
+        value -> :erlang.binary_to_term(value, [:safe])
+      end
+
     %Object{key: key, value: value}
   end
 
@@ -146,12 +149,14 @@ defmodule NebulexFdbAdapter do
     key = :erlang.term_to_binary(key)
     value = :erlang.term_to_binary(value)
 
-    err = FDB.Database.transact(
-      cache.__db__,
-      fn transaction ->
-        Transaction.set(transaction, key, value)
-      end
-    )
+    err =
+      FDB.Database.transact(
+        cache.__db__,
+        fn transaction ->
+          Transaction.set(transaction, key, value)
+        end
+      )
+
     case err do
       :ok -> true
       nil -> false
@@ -161,6 +166,7 @@ defmodule NebulexFdbAdapter do
   @impl true
   def has_key?(cache, key) do
     ets_key = :erlang.term_to_binary(key)
+
     ets_value =
       Database.transact(
         cache.__db__,
@@ -168,9 +174,10 @@ defmodule NebulexFdbAdapter do
           Transaction.get(transaction, ets_key)
         end
       )
+
     case ets_value do
       nil -> false
-      value -> true
+      _ -> true
     end
   end
 
@@ -225,26 +232,35 @@ defmodule NebulexFdbAdapter do
         end
       )
 
-    value = :erlang.binary_to_term(value, [:safe])
-    %Object{key: key, value: value}
+    case value do
+      nil -> nil
+      value -> %Object{key: key, value: :erlang.binary_to_term(value, [:safe])}
+    end
   end
 
   @impl true
   def update_counter(cache, key, incr, _opts) do
+    key = :erlang.term_to_binary(key)
+
     FDB.Database.transact(
       cache.__db__,
       fn transaction ->
-        orig_value =
-          Transaction.get(transaction, key)
-          |> :erlang.binary_to_term([:safe])
+        ets_value = Transaction.get(transaction, key)
 
-        new_value = orig_value + incr
-        ets_value = :erlang.term_to_binary(new_value)
-        err = Transaction.set(transaction, key, ets_value)
+        case ets_value do
+          nil ->
+            nil
 
-        case err do
-          :ok -> new_value
-          _ -> nil
+          _ ->
+            orig_value = :erlang.binary_to_term(ets_value, [:safe])
+            new_value = orig_value + incr
+            ets_new_value = :erlang.term_to_binary(new_value)
+            err = Transaction.set(transaction, key, ets_new_value)
+
+            case err do
+              :ok -> new_value
+              _ -> nil
+            end
         end
       end
     )
