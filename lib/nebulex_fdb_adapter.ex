@@ -71,7 +71,7 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get_many(cache, list, opts) do
+  def get_many(cache, list, _opts) do
     values =
       Enum.map(list, fn key ->
         Database.transact(
@@ -89,7 +89,7 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set_many(cache, list, opts) do
+  def set_many(cache, list, _opts) do
     keys = Enum.map(list, fn %Object{key: key} -> key end)
 
     values =
