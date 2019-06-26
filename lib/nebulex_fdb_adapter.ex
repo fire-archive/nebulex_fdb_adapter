@@ -97,13 +97,14 @@ defmodule NebulexFdbAdapter do
         Database.transact(
           cache.__db__,
           fn transaction ->
-            Transaction.get(transaction, key)
+            Transaction.get_q(transaction, key)
           end
         )
       end)
 
     Enum.zip(list, values)
-    |> List.foldr(%{}, fn {key, ets_value}, acc ->
+    |> List.foldr(%{}, fn {key, future}, acc ->
+      ets_value = Future.await(future)
       value =
         case ets_value do
           nil -> nil
