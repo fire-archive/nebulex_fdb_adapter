@@ -121,19 +121,16 @@ defmodule NebulexFdbAdapter do
       Enum.map(list, fn %Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
         key = :erlang.term_to_binary(key)
-
-        Database.transact(
-            cache.__db__,
-            fn transaction ->
-              Transaction.set(transaction, key, value)
-            end
-          )
+        transaction = FDB.Transaction.create(cache.__db__)
+        :ok = FDB.Transaction.set(transaction, key, value)
+        Transaction.commit_q(transaction)
       end)
 
     result =
       Enum.zip(list, values)
-      |> Enum.reduce([], fn {key, value}, acc ->
-        case value do
+      |> Enum.reduce([], fn {key, future}, acc ->
+        ets_value = Future.await(future)
+        case ets_value do
           :ok -> acc
           _ -> acc ++ [key]
         end
