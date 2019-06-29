@@ -12,7 +12,7 @@ defmodule NebulexFdbAdapter do
 
   alias Nebulex.Object
 
-  alias FDB.{Directory, Transaction, Database, Cluster, Future}
+  alias FDB.{Directory, Transaction, Database, Future}
   alias FDB.Coder.{Subspace}
 
   ## Adapter
@@ -42,7 +42,7 @@ defmodule NebulexFdbAdapter do
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
 
-    db = Database.create()
+    db = Database.create(cluster_file_path)
 
     root = Directory.new()
 
