@@ -20,7 +20,7 @@ defmodule NebulexFdbAdapter do
   @impl true
   defmacro __before_compile__(env) do
     # TODO move to init
-    :ok = FDB.start(600)
+    :ok = FDB.start(610)
     cache = env.module
     config = Module.get_attribute(cache, :config)
     path = Keyword.fetch!(config, :db_path)
