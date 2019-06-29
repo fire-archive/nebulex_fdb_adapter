@@ -3,14 +3,14 @@ for file <- File.ls!("test/support") do
 end
 
 {:ok, _cache} = NebulexFdbAdapter.TestCache.start_link()
-
+{:ok, _pool} = NebulexFdbAdapter.Pool.start(nil, nil)
 # init caches
 Enum.each(1..5000, fn x ->
   NebulexFdbAdapter.TestCache.set(x, x)
 end)
 
 # samples
-keys = Enum.to_list(1..10_000)
+keys = Enum.to_list(1..1_000_000)
 bulk = for x <- 1..10, do: {x, x}
 
 inputs = %{

@@ -7,6 +7,7 @@
   "fdb": {:hex, :fdb, "6.1.8-0", "365cde1d2df5688cf2257af1842c12b1d553dd1253fd7630575bc157c5e25ad5", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}, {:sweet_xml, "~> 0.6", [hex: :sweet_xml, repo: "hexpm", optional: false]}], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "nebulex": {:hex, :nebulex, "1.1.0", "be45cc3a2b7d01eb7da05747d38072d336187d05796ad9ef2d9dad9be430f915", [:mix], [{:shards, "~> 0.6", [hex: :shards, repo: "hexpm", optional: false]}], "hexpm"},
+  "poolboy": {:hex, :poolboy, "1.5.2", "392b007a1693a64540cead79830443abf5762f5d30cf50bc95cb2c1aaafa006b", [:rebar3], [], "hexpm"},
   "shards": {:hex, :shards, "0.6.0", "678d292ad74a4598a872930f9b12251f43e97f6050287f1fb712fbfd3d282f75", [:make, :rebar3], [], "hexpm"},
   "sweet_xml": {:hex, :sweet_xml, "0.6.6", "fc3e91ec5dd7c787b6195757fbcf0abc670cee1e4172687b45183032221b66b8", [:mix], [], "hexpm"},
 }
