@@ -4,7 +4,7 @@
   "benchee_json": {:hex, :benchee_json, "1.0.0", "cc661f4454d5995c08fe10dd1f2f72f229c8f0fb1c96f6b327a8c8fc96a91fe5", [:mix], [{:benchee, ">= 0.99.0 and < 2.0.0", [hex: :benchee, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm"},
   "deep_merge": {:hex, :deep_merge, "1.0.0", "b4aa1a0d1acac393bdf38b2291af38cb1d4a52806cf7a4906f718e1feb5ee961", [:mix], [], "hexpm"},
   "elixir_make": {:hex, :elixir_make, "0.6.0", "38349f3e29aff4864352084fc736fa7fa0f2995a819a737554f7ebd28b85aaab", [:mix], [], "hexpm"},
-  "fdb": {:hex, :fdb, "6.0.15-1", "c254106bd029ffc6c0569c780d45b980ae60ac65a80c8edfab5fad4bc061d4e8", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}, {:sweet_xml, "~> 0.6", [hex: :sweet_xml, repo: "hexpm", optional: false]}], "hexpm"},
+  "fdb": {:hex, :fdb, "6.1.8-0", "365cde1d2df5688cf2257af1842c12b1d553dd1253fd7630575bc157c5e25ad5", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}, {:sweet_xml, "~> 0.6", [hex: :sweet_xml, repo: "hexpm", optional: false]}], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "nebulex": {:hex, :nebulex, "1.1.0", "be45cc3a2b7d01eb7da05747d38072d336187d05796ad9ef2d9dad9be430f915", [:mix], [{:shards, "~> 0.6", [hex: :shards, repo: "hexpm", optional: false]}], "hexpm"},
   "shards": {:hex, :shards, "0.6.0", "678d292ad74a4598a872930f9b12251f43e97f6050287f1fb712fbfd3d282f75", [:make, :rebar3], [], "hexpm"},

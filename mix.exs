@@ -29,7 +29,7 @@ defmodule NebulexFdbAdapter.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:fdb, "6.0.15-1"},
+      {:fdb, "~> 6.1.8-0"},
       {:benchee, "~> 1.0", optional: true, only: :dev},
       {:benchee_html, "~> 1.0", optional: true, only: :dev},
       # This is because the adapter tests need some support modules and shared

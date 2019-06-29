@@ -42,9 +42,7 @@ defmodule NebulexFdbAdapter do
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
 
-    db =
-      Cluster.create(cluster_file_path)
-      |> Database.create()
+    db = Database.create()
 
     root = Directory.new()
 
