@@ -14,6 +14,8 @@ defmodule Benchee.Formatters.FDB do
       ops_scale =
         cond do
           s.job_name =~ "10 op" -> 10 * concurrency
+          s.job_name =~ "get_many" -> 10 * concurrency
+          s.job_name =~ "set_many" -> 10 * concurrency
           true -> concurrency
         end
 
@@ -21,10 +23,10 @@ defmodule Benchee.Formatters.FDB do
         name: s.job_name,
         concurrency: concurrency,
         ops: ops_scale * stats.ips,
-        average: stats.average / 1000,
-        max: stats.maximum / 1000,
-        min: stats.minimum / 1000,
-        deviation: stats.std_dev_ratio * 100
+        # average: stats.average,
+        # max: stats.maximum,
+        # min: stats.minimum,
+        # deviation: stats.std_dev_ratio
       }
     end)
   end
@@ -117,6 +119,7 @@ benchmarks = %{
   # end,
   # "set_many" => fn {cache, _random} ->
   #   cache.set_many(bulk)
+  #   cache.set_many(1..10)
   # end,
   "delete" => fn {cache} ->
     cache.delete(Utils.random_key())
