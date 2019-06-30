@@ -3,8 +3,7 @@ defmodule NebulexFdbAdapter.Worker do
   alias Nebulex.Object
   alias Nebulex.Object
 
-  alias FDB.{Directory, Transaction, Database, Future}
-  alias FDB.Coder.{Subspace}
+  alias FDB.{Transaction, Database, Future}
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, [])

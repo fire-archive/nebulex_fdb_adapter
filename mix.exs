@@ -30,8 +30,6 @@ defmodule NebulexFdbAdapter.MixProject do
   defp deps do
     [
       {:fdb, github: "ananthakumaran/fdb", tag: "v6.1.18-0"},
-      {:benchee, "~> 1.0", only: :dev},
-      {:benchee_html, "~> 1.0", only: :dev},
       {:poolboy, "~> 1.5.1"},
       # This is because the adapter tests need some support modules and shared
       # tests from nebulex dependency, and the hex dependency doesn't include
