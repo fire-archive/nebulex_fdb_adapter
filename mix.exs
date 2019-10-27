@@ -35,7 +35,7 @@ defmodule NebulexFdbAdapter.MixProject do
       # the test folder. Hence, to run the tests it is necessary to fetch
       # nebulex dependency directly from GH.
       {:nebulex, nebulex_opts()},
-      {:basho_bench, github: "mrallen1/basho_bench", branch: "mra-rebar3"},
+      {:basho_bench, github: "mrallen1/basho_bench", branch: "mra-rebar3"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

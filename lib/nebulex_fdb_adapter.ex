@@ -26,20 +26,21 @@ defmodule NebulexFdbAdapter do
       def __db_path__, do: unquote(path)
 
       def __cluster_file_path__, do: unquote(cluster_file_path)
-
-      def __db__ do
-        :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
-      end
     end
+  end
+
+  def db do
+    :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
   end
 
   @impl true
   def init(opts) do
     try do
-          FDB.start(610)
+      FDB.start(610)
     rescue
       e in RuntimeError -> e
     end
+
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
 
@@ -75,12 +76,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get(cache, key, _opts) do
+  def get(_cache, key, _opts) do
     ets_key = :erlang.term_to_binary(key)
 
     ets_value =
       Database.transact(
-        cache.__db__,
+        db(),
         fn transaction ->
           Transaction.get(transaction, ets_key)
         end
@@ -96,13 +97,13 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get_many(cache, list, _opts) do
+  def get_many(_cache, list, _opts) do
     values =
       Enum.map(list, fn key ->
         key = :erlang.term_to_binary(key)
 
         Database.transact(
-          cache.__db__,
+          db(),
           fn transaction ->
             Transaction.get_q(transaction, key)
           end
@@ -112,6 +113,7 @@ defmodule NebulexFdbAdapter do
     Enum.zip(list, values)
     |> List.foldr(%{}, fn {key, future}, acc ->
       ets_value = Future.await(future)
+
       value =
         case ets_value do
           nil -> nil
@@ -123,12 +125,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set_many(cache, list, _opts) do
+  def set_many(_cache, list, _opts) do
     values =
       Enum.map(list, fn %Nebulex.Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
         key = :erlang.term_to_binary(key)
-        transaction = FDB.Transaction.create(cache.__db__)
+        transaction = FDB.Transaction.create(db())
         :ok = FDB.Transaction.set(transaction, key, value)
         Transaction.commit_q(transaction)
       end)
@@ -137,6 +139,7 @@ defmodule NebulexFdbAdapter do
       Enum.zip(list, values)
       |> Enum.reduce([], fn {key, future}, acc ->
         ets_value = Future.await(future)
+
         case ets_value do
           :ok -> acc
           _ -> acc ++ [key]
@@ -150,13 +153,13 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set(cache, %Nebulex.Object{key: key, value: value}, _opts) do
+  def set(_cache, %Nebulex.Object{key: key, value: value}, _opts) do
     key = :erlang.term_to_binary(key)
     value = :erlang.term_to_binary(value)
 
     err =
       FDB.Database.transact(
-        cache.__db__,
+        db(),
         fn transaction ->
           Transaction.set(transaction, key, value)
         end
@@ -169,12 +172,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def has_key?(cache, key) do
+  def has_key?(_cache, key) do
     ets_key = :erlang.term_to_binary(key)
 
     ets_value =
       Database.transact(
-        cache.__db__,
+        db(),
         fn transaction ->
           Transaction.get(transaction, ets_key)
         end
@@ -197,11 +200,11 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def delete(cache, key, _opts) do
+  def delete(_cache, key, _opts) do
     key = :erlang.term_to_binary(key)
 
     FDB.Database.transact(
-      cache.__db__,
+      db(),
       fn transaction ->
         Transaction.clear(transaction, key)
       end
@@ -224,12 +227,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def take(cache, key, _opts) do
+  def take(_cache, key, _opts) do
     key = :erlang.term_to_binary(key)
 
     value =
       FDB.Database.transact(
-        cache.__db__,
+        db(),
         fn transaction ->
           future = Transaction.get_q(transaction, key)
           Transaction.clear(transaction, key)
@@ -244,11 +247,11 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def update_counter(cache, key, incr, _opts) do
+  def update_counter(_cache, key, incr, _opts) do
     key = :erlang.term_to_binary(key)
 
     FDB.Database.transact(
-      cache.__db__,
+      db(),
       fn transaction ->
         ets_value = Transaction.get(transaction, key)
 
