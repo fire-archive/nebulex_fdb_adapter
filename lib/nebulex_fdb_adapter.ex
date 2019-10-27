@@ -10,8 +10,6 @@ defmodule NebulexFdbAdapter do
   @behaviour Nebulex.Adapter
   @behaviour Nebulex.Adapter.Queryable
 
-  alias Nebulex.Object
-
   alias FDB.{Directory, Transaction, Database, Future}
   alias FDB.Coder.{Subspace}
 
@@ -19,8 +17,6 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   defmacro __before_compile__(env) do
-    # TODO move to init
-    :ok = FDB.start(610)
     cache = env.module
     config = Module.get_attribute(cache, :config)
     path = Keyword.fetch!(config, :db_path)
@@ -39,6 +35,7 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def init(opts) do
+    FDB.start(610)
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
 
@@ -91,7 +88,7 @@ defmodule NebulexFdbAdapter do
         value -> :erlang.binary_to_term(value, [:safe])
       end
 
-    %Object{key: key, value: value}
+    %Nebulex.Object{key: key, value: value}
   end
 
   @impl true
@@ -117,14 +114,14 @@ defmodule NebulexFdbAdapter do
           ets_value -> :erlang.binary_to_term(ets_value, [:safe])
         end
 
-      Map.put(acc, key, %Object{key: key, value: value})
+      Map.put(acc, key, %Nebulex.Object{key: key, value: value})
     end)
   end
 
   @impl true
   def set_many(cache, list, _opts) do
     values =
-      Enum.map(list, fn %Object{key: key, value: value} ->
+      Enum.map(list, fn %Nebulex.Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
         key = :erlang.term_to_binary(key)
         transaction = FDB.Transaction.create(cache.__db__)
@@ -149,7 +146,7 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set(cache, %Object{key: key, value: value}, _opts) do
+  def set(cache, %Nebulex.Object{key: key, value: value}, _opts) do
     key = :erlang.term_to_binary(key)
     value = :erlang.term_to_binary(value)
 
@@ -238,7 +235,7 @@ defmodule NebulexFdbAdapter do
 
     case value do
       nil -> nil
-      value -> %Object{key: key, value: :erlang.binary_to_term(value, [:safe])}
+      value -> %Nebulex.Object{key: key, value: :erlang.binary_to_term(value, [:safe])}
     end
   end
 
