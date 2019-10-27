@@ -35,7 +35,11 @@ defmodule NebulexFdbAdapter do
 
   @impl true
   def init(opts) do
-    FDB.start(610)
+    try do
+          FDB.start(610)
+    rescue
+      e in RuntimeError -> e
+    end
     cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
     db_path = Keyword.fetch!(opts, :db_path)
 
