@@ -5,18 +5,18 @@ defmodule NebulexFdbAdapterTest do
   alias NebulexFdbAdapter.TestCache, as: Cache
 
   setup_all do
-    Cache.start_link()
-    NebulexFdbAdapter.Pool.start(nil, nil)
+    {:ok, pid} = Cache.start_link()
     :ok
+
+    on_exit(fn ->
+      _ = :timer.sleep(100)
+      if Process.alive?(pid), do: Cache.stop(pid)
+    end)
   end
 
   test "get an unknown key" do
     Cache.delete("test")
     assert Cache.get("test") == nil
-  end
-
-  test "get a  key" do
-    Cache.get("test")
   end
 
   test "set, get, and delete" do
@@ -71,4 +71,10 @@ defmodule NebulexFdbAdapterTest do
     assert Cache.set_many(%{"1" => "one", "2" => "two", "3" => "three"})
     assert Cache.get_many(["1", "2", "3"]) == %{"1" => "one", "2" => "two", "3" => "three"}
   end
+
+  # test "set many and get" do
+  #   assert Cache.set_many(:apples 3, :bananas 1) == :ok
+  #   assert Cache.get("a") == 1
+  #   assert Cache.get("c") == 3
+  # end
 end

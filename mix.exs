@@ -29,8 +29,7 @@ defmodule NebulexFdbAdapter.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:fdb, github: "ananthakumaran/fdb", tag: "v6.1.18-0"},
-      {:poolboy, "~> 1.5.1"},
+      {:fdb, "~> 6.1.18-0"},
       # This is because the adapter tests need some support modules and shared
       # tests from nebulex dependency, and the hex dependency doesn't include
       # the test folder. Hence, to run the tests it is necessary to fetch
