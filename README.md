@@ -2,6 +2,15 @@
 
 **TODO: Add description**
 
+## Benchmarking
+
+```
+mix -iex -S
+NebulexFdbAdapter.Bench.bench
+Rscript deps/basho_bench*/priv/summary.r -i ./tests/current/
+```
+
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
