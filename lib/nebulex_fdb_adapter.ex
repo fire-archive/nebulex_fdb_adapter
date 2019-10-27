@@ -29,43 +29,51 @@ defmodule NebulexFdbAdapter do
     end
   end
 
-  def db do
-    :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
+  def db(cache) do
+    try do
+      :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
+    rescue
+      _e in ArgumentError ->
+        cluster_file_path = cache.__cluster_file_path__
+        db_path = cache.__db_path__
+
+        db = Database.create(cluster_file_path)
+
+        root = Directory.new()
+
+        dir =
+          Database.transact(db, fn tr ->
+            Directory.create_or_open(root, tr, db_path)
+          end)
+
+        subspace = Subspace.new(dir)
+        coder = Transaction.Coder.new(subspace)
+        connected_db = Database.set_defaults(db, %{coder: coder})
+        exists = :ets.whereis(:nebulex_fdb_adapter)
+
+        if exists == :undefined do
+          :ets.new(:nebulex_fdb_adapter, [
+            :set,
+            :public,
+            {:write_concurrency, true},
+            {:read_concurrency, true},
+            :named_table
+          ])
+        end
+
+        true = :ets.insert(:nebulex_fdb_adapter, {:db, connected_db})
+        :ets.lookup_element(:nebulex_fdb_adapter, :db, 2)
+    end
   end
 
   @impl true
-  def init(opts) do
+  def init(_opts) do
     try do
       FDB.start(610)
     rescue
       e in RuntimeError -> e
     end
 
-    cluster_file_path = Keyword.fetch!(opts, :cluster_file_path)
-    db_path = Keyword.fetch!(opts, :db_path)
-
-    db = Database.create(cluster_file_path)
-
-    root = Directory.new()
-
-    dir =
-      Database.transact(db, fn tr ->
-        Directory.create_or_open(root, tr, db_path)
-      end)
-
-    subspace = Subspace.new(dir)
-    coder = Transaction.Coder.new(subspace)
-    connected_db = Database.set_defaults(db, %{coder: coder})
-
-    :ets.new(:nebulex_fdb_adapter, [
-      :set,
-      :public,
-      {:write_concurrency, true},
-      {:read_concurrency, true},
-      :named_table
-    ])
-
-    true = :ets.insert(:nebulex_fdb_adapter, {:db, connected_db})
     {:ok, []}
   end
 
@@ -76,12 +84,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get(_cache, key, _opts) do
+  def get(cache, key, _opts) do
     ets_key = :erlang.term_to_binary(key)
 
     ets_value =
       Database.transact(
-        db(),
+        db(cache),
         fn transaction ->
           Transaction.get(transaction, ets_key)
         end
@@ -97,13 +105,13 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def get_many(_cache, list, _opts) do
+  def get_many(cache, list, _opts) do
     values =
       Enum.map(list, fn key ->
         key = :erlang.term_to_binary(key)
 
         Database.transact(
-          db(),
+          db(cache),
           fn transaction ->
             Transaction.get_q(transaction, key)
           end
@@ -125,12 +133,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set_many(_cache, list, _opts) do
+  def set_many(cache, list, _opts) do
     values =
       Enum.map(list, fn %Nebulex.Object{key: key, value: value} ->
         value = :erlang.term_to_binary(value)
         key = :erlang.term_to_binary(key)
-        transaction = FDB.Transaction.create(db())
+        transaction = FDB.Transaction.create(db(cache))
         :ok = FDB.Transaction.set(transaction, key, value)
         Transaction.commit_q(transaction)
       end)
@@ -153,13 +161,13 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def set(_cache, %Nebulex.Object{key: key, value: value}, _opts) do
+  def set(cache, %Nebulex.Object{key: key, value: value}, _opts) do
     key = :erlang.term_to_binary(key)
     value = :erlang.term_to_binary(value)
 
     err =
       FDB.Database.transact(
-        db(),
+        db(cache),
         fn transaction ->
           Transaction.set(transaction, key, value)
         end
@@ -172,12 +180,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def has_key?(_cache, key) do
+  def has_key?(cache, key) do
     ets_key = :erlang.term_to_binary(key)
 
     ets_value =
       Database.transact(
-        db(),
+        db(cache),
         fn transaction ->
           Transaction.get(transaction, ets_key)
         end
@@ -200,11 +208,11 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def delete(_cache, key, _opts) do
+  def delete(cache, key, _opts) do
     key = :erlang.term_to_binary(key)
 
     FDB.Database.transact(
-      db(),
+      db(cache),
       fn transaction ->
         Transaction.clear(transaction, key)
       end
@@ -227,12 +235,12 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def take(_cache, key, _opts) do
+  def take(cache, key, _opts) do
     key = :erlang.term_to_binary(key)
 
     value =
       FDB.Database.transact(
-        db(),
+        db(cache),
         fn transaction ->
           future = Transaction.get_q(transaction, key)
           Transaction.clear(transaction, key)
@@ -247,11 +255,11 @@ defmodule NebulexFdbAdapter do
   end
 
   @impl true
-  def update_counter(_cache, key, incr, _opts) do
+  def update_counter(cache, key, incr, _opts) do
     key = :erlang.term_to_binary(key)
 
     FDB.Database.transact(
-      db(),
+      db(cache),
       fn transaction ->
         ets_value = Transaction.get(transaction, key)
 
