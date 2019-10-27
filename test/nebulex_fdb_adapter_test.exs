@@ -5,7 +5,7 @@ defmodule NebulexFdbAdapterTest do
   alias NebulexFdbAdapter.TestCache, as: Cache
 
   setup_all do
-    Cache.start_link
+    Cache.start_link()
     NebulexFdbAdapter.Pool.start(nil, nil)
     :ok
   end

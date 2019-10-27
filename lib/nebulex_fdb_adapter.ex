@@ -55,7 +55,15 @@ defmodule NebulexFdbAdapter do
     subspace = Subspace.new(dir)
     coder = Transaction.Coder.new(subspace)
     connected_db = Database.set_defaults(db, %{coder: coder})
-    :ets.new(:nebulex_fdb_adapter, [:set, :public, {:write_concurrency, true}, {:read_concurrency, true}, :named_table])
+
+    :ets.new(:nebulex_fdb_adapter, [
+      :set,
+      :public,
+      {:write_concurrency, true},
+      {:read_concurrency, true},
+      :named_table
+    ])
+
     true = :ets.insert(:nebulex_fdb_adapter, {:db, connected_db})
     {:ok, []}
   end
